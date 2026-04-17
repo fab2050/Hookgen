@@ -1,0 +1,16 @@
+{
+  "name": "viral2026",
+  "version": "3.0.0",
+  "description": "AI viral video script generator powered by Groq",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>VIRAL2026 — AI Viral Video Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--card:#141414;--inp:#0e0e0e;--raised:#1a1a1a;
+  --bdr:#252525;--bdrL:#333;
+  --gold:#e2a308;--goldL:#facc15;--goldD:rgba(226,163,8,.12);--goldG:rgba(226,163,8,.25);
+  --grn:#22c55e;--grnD:rgba(34,197,94,.1);
+  --red:#ef4444;--redD:rgba(239,68,68,.1);
+  --org:#f97316;--orgD:rgba(249,115,22,.1);
+  --g3:#a3a3a3;--g5:#737373;--g7:#404040;--g8:#262626;
+  --r:12px;--rL:16px;--rXL:24px;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#f5f5f5;min-height:100vh;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:-40% -20% auto;width:140%;height:80%;background:radial-gradient(ellipse at 30% 0%,rgba(226,163,8,.04) 0%,transparent 60%),radial-gradient(ellipse at 70% 0%,rgba(226,163,8,.03) 0%,transparent 50%);pointer-events:none;z-index:0}
+.app{position:relative;z-index:1;max-width:1060px;margin:0 auto;padding:22px 18px 80px}
+
+/* Header */
+.hdr{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.logo-mark{width:44px;height:44px;background:linear-gradient(135deg,var(--gold),#f97316);border-radius:12px;display:grid;place-items:center;font-size:22px;box-shadow:0 4px 20px rgba(249,115,22,.25)}
+.logo-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-.04em}
+.logo-title span{color:var(--gold)}
+.badge{font-size:9px;font-weight:700;background:var(--gold);color:var(--bg);padding:2px 7px;border-radius:99px;vertical-align:super;margin-left:6px}
+.hdr-sub{font-size:13px;color:var(--g5);margin-bottom:16px}
+.hdr-sub b{color:var(--gold)}
+
+/* Rules strip */
+.rules{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:16px;padding:8px 12px;background:var(--card);border:1px solid var(--bdr);border-radius:14px}
+.rule{font-size:11px;font-weight:600;padding:4px 9px;border-radius:99px;background:var(--g8);color:var(--g5);border:1px solid transparent;transition:all .3s var(--ease)}
+.rule.done{background:var(--goldD);color:var(--gold);border-color:var(--goldD)}
+.rule.active{background:var(--gold);color:var(--bg);box-shadow:0 0 10px var(--goldG)}
+
+/* Step nav */
+.steps{display:flex;gap:2px;background:var(--card);border:1px solid var(--bdr);border-radius:14px;padding:3px;margin-bottom:16px;overflow-x:auto}
+.s-btn{flex:1;min-width:max-content;padding:8px 10px;border:none;border-radius:10px;background:transparent;color:var(--g5);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .25s var(--ease);white-space:nowrap;position:relative}
+.s-btn:hover:not(:disabled){color:#f5f5f5;background:var(--raised)}
+.s-btn.on{background:var(--gold);color:var(--bg);box-shadow:0 2px 8px var(--goldG)}
+.s-btn.ok::after{content:'✓';position:absolute;top:-3px;right:-1px;font-size:8px;background:var(--grn);color:#fff;width:14px;height:14px;border-radius:50%;display:grid;place-items:center}
+.s-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* Panels */
+.pnl{background:var(--card);border:1px solid var(--bdr);border-radius:var(--rXL);padding:28px 24px;animation:fadeIn .3s var(--ease)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.pnl-head{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.03em;margin-bottom:2px}
+.pnl-sub{color:var(--g5);font-size:14px;margin-bottom:18px}
+.pnl-sub b{color:var(--goldL)}
+.hidden{display:none !important}
+
+/* Form */
+.lbl{display:block;font-size:12px;font-weight:600;color:var(--g3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.inp{width:100%;background:var(--inp);border:1px solid var(--bdr);border-radius:var(--r);padding:13px 15px;font-size:15px;color:#f5f5f5;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:12px;transition:all .25s var(--ease)}
+.inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--goldD)}
+.inp::placeholder{color:var(--g7)}
+
+/* Profile grid */
+.prof-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0 16px}
+.prof{background:var(--inp);border:2px solid transparent;border-radius:10px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .25s var(--ease)}
+.prof:hover{border-color:var(--bdrL)}
+.prof.sel{border-color:var(--gold);background:var(--goldD);box-shadow:0 0 0 3px var(--goldD)}
+.prof-ico{font-size:22px}
+.prof-nm{font-size:11px;font-weight:600;margin-top:2px}
+.prof-ds{font-size:9px;color:var(--g5)}
+@media(max-width:600px){.prof-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* Buttons */
+.btn-gold{width:100%;padding:14px 20px;border:none;border-radius:var(--r);background:linear-gradient(135deg,var(--gold),#d97706);color:var(--bg);font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .25s var(--ease)}
+.btn-gold:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 24px var(--goldG)}
+.btn-gold:disabled{opacity:.5;cursor:wait}
+.btn-out{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--raised);color:#f5f5f5;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s var(--ease);font-family:'DM Sans',sans-serif}
+.btn-out:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
+.btn-out:disabled{opacity:.35;cursor:not-allowed}
+
+/* Loading */
+.load{display:flex;align-items:center;gap:12px;padding:18px;margin-top:14px;background:var(--goldD);border:1px solid rgba(226,163,8,.2);border-radius:var(--r);font-size:13px;color:var(--goldL)}
+.dots{display:flex;gap:4px}
+.dots span{width:7px;height:7px;border-radius:50%;background:var(--gold);animation:pulse 1.2s ease-in-out infinite}
+.dots span:nth-child(2){animation-delay:.15s}
+.dots span:nth-child(3){animation-delay:.3s}
+@keyframes pulse{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1.1)}}
+
+/* Error */
+.err{background:var(--redD);border:1px solid var(--red);border-radius:var(--r);padding:14px;margin-top:14px;font-size:13px;color:#fca5a5;line-height:1.55}
+.err b{color:#fca5a5}
+
+/* Analysis box (new) */
+.analysis{background:var(--inp);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-top:14px;font-size:13px;line-height:1.7}
+.analysis-row{padding:5px 0;border-bottom:1px solid var(--bdr);display:flex;gap:10px}
+.analysis-row:last-child{border-bottom:none}
+.analysis-key{font-family:'Syne',sans-serif;font-weight:700;color:var(--gold);min-width:120px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding-top:2px}
+.analysis-val{color:var(--g3);flex:1}
+
+/* Banner */
+.banner{color:var(--goldL);font-style:italic;font-size:13px;padding:10px 14px;background:var(--goldD);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;margin-bottom:18px}
+
+/* Hook cards */
+.hooks-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+@media(max-width:700px){.hooks-grid{grid-template-columns:1fr}}
+.hk{background:var(--inp);border:2px solid var(--bdr);border-radius:var(--rL);padding:14px;cursor:pointer;transition:all .25s var(--ease);position:relative}
+.hk:hover{border-color:var(--bdrL);transform:translateY(-2px)}
+.hk.sel{border-color:var(--gold);background:var(--goldD);box-shadow:0 0 0 3px var(--goldD)}
+.hk.top{border-color:rgba(226,163,8,.4)}
+.hk-top-badge{position:absolute;top:-6px;right:8px;background:var(--gold);color:var(--bg);font-size:8px;font-weight:700;padding:2px 6px;border-radius:99px;text-transform:uppercase}
+.hk-meta{display:flex;gap:6px;align-items:center}
+.hk-score{padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;font-family:'Syne',sans-serif}
+.hk-score.hi{background:var(--gold);color:var(--bg)}
+.hk-score.md{background:var(--g8);color:var(--g3)}
+.hk-pattern{font-size:9px;color:var(--g5)}
+.hk-txt{font-size:13px;margin-top:8px;line-height:1.5}
+
+/* Depth box */
+.depth{background:var(--inp);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-top:14px}
+.depth-item{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--bdr);font-size:13px}
+.depth-item:last-child{border-bottom:none}
+.depth-n{font-family:'Syne',sans-serif;font-weight:700;color:var(--gold);min-width:22px}
+
+/* Options (emotions) */
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+@media(max-width:700px){.opts{grid-template-columns:1fr}}
+.opt{background:var(--inp);border:2px solid var(--bdr);border-radius:var(--rL);padding:14px;cursor:pointer;transition:all .25s var(--ease)}
+.opt:hover{border-color:var(--bdrL);transform:translateY(-2px)}
+.opt.sel{border-color:var(--gold);background:var(--goldD);box-shadow:0 0 0 3px var(--goldD)}
+.opt-emo{font-size:20px;margin-bottom:4px}
+.opt-ttl{font-weight:700;font-size:13px;margin-bottom:3px}
+.opt-dsc{font-size:12px;color:var(--g3);line-height:1.4}
+.opt-vo{margin-top:6px;font-size:11px;color:var(--goldL);font-style:italic}
+.opt-vis{margin-top:4px;font-size:10px;color:var(--g5)}
+
+/* Opinions list */
+.ops{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.op{display:flex;align-items:center;gap:12px;background:var(--inp);border:2px solid var(--bdr);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .25s var(--ease)}
+.op:hover{border-color:var(--bdrL)}
+.op.sel{border-color:var(--gold);background:var(--goldD);box-shadow:0 0 0 3px var(--goldD)}
+.op-n{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--g7);min-width:24px}
+.op.sel .op-n{color:var(--gold)}
+.op-t{font-size:13px;line-height:1.4}
+
+/* Script segments */
+.seg{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--bdr)}
+.seg:last-child{border-bottom:none}
+.seg-t{font-family:'Syne',sans-serif;font-weight:700;color:var(--gold);min-width:44px;font-size:12px}
+.seg-body{flex:1;font-size:13px}
+.seg-row{margin-bottom:3px}
+.seg-lbl{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--gold);margin-right:4px}
+.seg-vo{color:#f5f5f5;font-size:14px}
+.seg-cam{color:var(--goldL);font-size:12px}
+.seg-act{color:#f5f5f5;font-size:12px}
+.seg-vis{color:var(--g3);font-size:12px;font-style:italic}
+.seg-txt{background:var(--gold);color:var(--bg);padding:1px 7px;border-radius:6px;font-size:10px;font-weight:700;font-family:'Syne',sans-serif;display:inline-block;margin-top:2px}
+.seg-tr{color:var(--g5);font-size:10px}
+.seg-ex{color:var(--g3);font-size:11px;font-style:italic}
+
+/* Validation */
+.verdict-box{border-radius:var(--rL);padding:18px;margin-bottom:18px}
+.verdict-hd{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;margin-bottom:4px}
+.scores-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+@media(max-width:700px){.scores-grid{grid-template-columns:repeat(2,1fr)}}
+.score-card{background:var(--inp);border:1px solid var(--bdr);border-radius:var(--r);padding:12px}
+.score-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.score-name{font-size:11px;font-weight:700;text-transform:capitalize}
+.score-num{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.score-note{font-size:11px;color:var(--g3);line-height:1.4}
+.weakness{background:var(--orgD);border:1px solid rgba(249,115,22,.2);border-radius:10px;padding:12px;margin-bottom:6px;transition:all .3s var(--ease)}
+.weakness.applied{background:var(--grnD);border-color:var(--grn)}
+.weakness-issue{font-size:12px;font-weight:600;color:var(--org);margin-bottom:4px}
+.weakness.applied .weakness-issue{color:var(--grn)}
+.weakness-fix{font-size:12px;color:var(--g3);margin-bottom:8px}
+.fix-btn{padding:5px 12px;border:1px solid var(--org);border-radius:8px;background:transparent;color:var(--org);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s var(--ease)}
+.fix-btn:hover{background:var(--org);color:#fff}
+.fix-btn.done{background:var(--grn);color:#fff;border-color:var(--grn);cursor:default}
+
+/* Video prompt */
+.vp-box{background:var(--inp);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;position:relative;margin-bottom:14px}
+.vp-lbl{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--gold);margin-bottom:8px}
+.vp-text{font-size:13px;color:var(--g3);line-height:1.7;white-space:pre-wrap;max-height:400px;overflow-y:auto;padding-right:4px}
+.vp-cp{position:absolute;top:12px;right:12px;background:var(--raised);border:1px solid var(--bdr);border-radius:8px;padding:5px 10px;color:var(--g5);font-size:11px;cursor:pointer;transition:all .2s var(--ease)}
+.vp-cp:hover{color:var(--gold);border-color:var(--gold)}
+.vp-cp.done{color:var(--grn);border-color:var(--grn)}
+
+/* Footer */
+.ftr{display:flex;gap:8px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:10px 18px;font-size:13px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.6);z-index:9999;opacity:0;transition:all .35s ease;display:flex;align-items:center;gap:6px;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--grn)}
+.toast.err{border-color:var(--red)}
+
+/* Strength/Weakness sections */
+.section-hd{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;margin-bottom:6px}
+.section-hd.grn{color:var(--grn)}
+.section-hd.org{color:var(--org)}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--g8);border-radius:99px}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="logo-mark">🔥</div>
+    <h1 class="logo-title">VIRAL<span>2026</span><span class="badge">AI v3</span></h1>
+  </div>
+  <p class="hdr-sub">AI viral video engine — <b>Brian Mark's 6 Rules</b> + niche-specific viral mechanics (powered by Groq)</p>
+
+  <!-- 6 RULES STRIP -->
+  <div class="rules" id="rules-strip">
+    <div class="rule active" data-r="0">1. Hook</div>
+    <div class="rule" data-r="1">2. Depth</div>
+    <div class="rule" data-r="2">3. Emotion</div>
+    <div class="rule" data-r="3">4. Opinion</div>
+    <div class="rule" data-r="4">5. Relatable</div>
+    <div class="rule" data-r="5">6. Quality</div>
+  </div>
+
+  <!-- STEP NAV -->
+  <nav class="steps" id="steps-nav">
+    <button class="s-btn on" data-s="0">0. ANALYZE</button>
+    <button class="s-btn" data-s="1" disabled>1. HOOK</button>
+    <button class="s-btn" data-s="2" disabled>2. DEPTH</button>
+    <button class="s-btn" data-s="3" disabled>3. EMOTION</button>
+    <button class="s-btn" data-s="4" disabled>4. OPINION</button>
+    <button class="s-btn" data-s="5" disabled>5. SCRIPT</button>
+    <button class="s-btn" data-s="6" disabled>6. VALIDATE</button>
+  </nav>
+
+  <!-- PANEL 0: ANALYZE (NEW) -->
+  <section class="pnl" id="p0">
+    <h2 class="pnl-head">Business Analysis</h2>
+    <p class="pnl-sub">AI first studies your business to craft UNIQUE viral content. No more generic hooks.</p>
+
+    <label class="lbl" for="topic-input">Topic / Business / Niche</label>
+    <input id="topic-input" class="inp" type="text" placeholder="e.g. Buy Here Pay Here Cars, Taco Truck, Roofing Company, Personal Injury Lawyer...">
+
+    <label class="lbl">Target Audience (optional, makes it sharper)</label>
+    <input id="audience-input" class="inp" type="text" placeholder="e.g. First-time car buyers in Utah with bad credit...">
+
+    <label class="lbl">Copywriter Voice</label>
+    <div class="prof-grid" id="prof-grid"></div>
+
+    <button class="btn-gold" id="btn-analyze">🔬 ANALYZE MY BUSINESS</button>
+    <div id="analyze-slot"></div>
+  </section>
+
+  <!-- PANEL 1: HOOK -->
+  <section class="pnl hidden" id="p1">
+    <h2 class="pnl-head">Hook Generator</h2>
+    <p class="pnl-sub">Rule 1: <b>Weak hook = low views.</b> First 1-3 seconds decide everything.</p>
+    <button class="btn-gold" id="btn-hooks">⚡ GENERATE 8 UNIQUE HOOKS</button>
+    <div id="hooks-slot"></div>
+  </section>
+
+  <!-- PANEL 2: DEPTH -->
+  <section class="pnl hidden" id="p2">
+    <h2 class="pnl-head">Depth Builder</h2>
+    <p class="pnl-sub">Rule 2: <b>Low saves = not enough depth.</b></p>
+    <div class="banner" id="banner-2"></div>
+    <button class="btn-gold" id="btn-depth">📚 GENERATE DEPTH CONTENT</button>
+    <div id="depth-slot"></div>
+  </section>
+
+  <!-- PANEL 3: EMOTION -->
+  <section class="pnl hidden" id="p3">
+    <h2 class="pnl-head">Emotion Lab</h2>
+    <p class="pnl-sub">Rule 3: <b>Low likes = no emotion.</b></p>
+    <div class="banner" id="banner-3"></div>
+    <button class="btn-gold" id="btn-emotions">💓 GENERATE 3 EMOTION ANGLES</button>
+    <div id="emotions-slot"></div>
+  </section>
+
+  <!-- PANEL 4: OPINION -->
+  <section class="pnl hidden" id="p4">
+    <h2 class="pnl-head">Opinion Lab</h2>
+    <p class="pnl-sub">Rule 4: <b>Low comments = no opinion.</b></p>
+    <div class="banner" id="banner-4"></div>
+    <button class="btn-gold" id="btn-opinions">📢 GENERATE 5 OPINIONS</button>
+    <div id="opinions-slot"></div>
+  </section>
+
+  <!-- PANEL 5: SCRIPT -->
+  <section class="pnl hidden" id="p5">
+    <h2 class="pnl-head">Production Script</h2>
+    <p class="pnl-sub">Rule 5: <b>Relatability.</b> Full shot-by-shot with camera, action, visuals, text, transitions.</p>
+    <button class="btn-gold" id="btn-script">🎬 GENERATE PRODUCTION SCRIPT</button>
+    <div id="script-slot"></div>
+  </section>
+
+  <!-- PANEL 6: VALIDATE -->
+  <section class="pnl hidden" id="p6">
+    <h2 class="pnl-head">Quality Validator</h2>
+    <p class="pnl-sub">Rule 6: <b>Quality check.</b> Full analysis + bulletproof Video AI Prompt.</p>
+    <button class="btn-gold" id="btn-validate">🔍 VALIDATE + GENERATE VIDEO AI PROMPT</button>
+    <div id="validate-slot"></div>
+  </section>
+
+  <!-- FOOTER -->
+  <div class="ftr">
+    <button class="btn-out" id="btn-copy-all" disabled>📋 Copy Full Script</button>
+    <button class="btn-out" id="btn-copy-prompt" disabled>🎥 Copy Video AI Prompt</button>
+    <button class="btn-out" id="btn-reset">🔄 Reset</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════════════════
+const S = {
+  step: 0,
+  profile: 0,
+  topic: '',
+  audience: '',
+  analysis: null,
+  hooks: [],
+  selHook: null,
+  depthItems: [],
+  emotions: [],
+  selEmotion: null,
+  opinions: [],
+  selOpinion: null,
+  script: null,
+  validation: null,
+  appliedFixes: new Set(),
+  busy: false
+};
+
+const PROFILES = [
+  { name: 'Brian Mark', icon: '👑', desc: 'Authority', style: 'confident, exclusive, high-status, uses power words and scarcity' },
+  { name: 'Gary Vee', icon: '🔥', desc: 'Hustle', style: 'aggressive, direct, motivational, street-smart, calls out laziness' },
+  { name: 'Alex Hormozi', icon: '📈', desc: 'Value', style: 'analytical, value-stacking, numbers and specifics, irresistible offers' },
+  { name: 'MrBeast', icon: '🎬', desc: 'Spectacle', style: 'extreme scenarios, curiosity gaps, superlatives, clickable premises' },
+  { name: 'Iman Gadzhi', icon: '👔', desc: 'Premium', style: 'luxury positioning, contrarian, speaks to ambitious audiences' },
+  { name: 'Hamza', icon: '💪', desc: 'Discipline', style: 'tough love, accountability, masculine energy, self-improvement' },
+  { name: 'Contrarian', icon: '⚡', desc: 'Hot takes', style: 'challenges conventional wisdom, provocative, bold uncomfortable claims' },
+  { name: 'Storyteller', icon: '📖', desc: 'Story', style: 'opens with vivid scenes, paints pictures, emotional arcs' }
+];
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const esc = s => { const d = document.createElement('div'); d.textContent = String(s ?? ''); return d.innerHTML; };
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════════════════════
+let toastTimer;
+function toast(msg, type = 'ok') {
+  const el = $('#toast');
+  el.className = 'toast ' + type;
+  el.textContent = (type === 'ok' ? '✅ ' : '❌ ') + msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  CLIPBOARD (with fallback for older browsers / insecure contexts)
+// ═══════════════════════════════════════════════════════════════════════════
+async function copyText(text) {
+  if (!text) return false;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    // Fallback: textarea + execCommand
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-999999px';
+    ta.style.top = '-999999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (_e) {
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  BACKEND FETCH
+// ═══════════════════════════════════════════════════════════════════════════
+async function api(endpoint, payload) {
+  const res = await fetch('/api/' + endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'API error');
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function setLoading(slotId, msg) {
+  const slot = $('#' + slotId);
+  slot.innerHTML = '<div class="load"><div class="dots"><span></span><span></span><span></span></div><span>' + esc(msg) + '</span></div>';
+}
+function clearSlot(slotId) { $('#' + slotId).innerHTML = ''; }
+function showError(slotId, msg) {
+  $('#' + slotId).innerHTML = '<div class="err"><b>Error:</b> ' + esc(msg) + '<br><br>Hit the button again.</div>';
+}
+
+function canGo(n) {
+  if (n <= 0) return true;
+  if (n === 1) return !!S.analysis;
+  if (n === 2) return !!S.selHook;
+  if (n === 3) return S.depthItems.length > 0;
+  if (n === 4) return !!S.selEmotion;
+  if (n === 5) return !!S.selOpinion;
+  if (n === 6) return !!S.script;
+  return false;
+}
+
+function updateStepNav() {
+  $$('.s-btn').forEach((b, i) => {
+    b.classList.toggle('on', i === S.step);
+    b.disabled = !canGo(i) && i !== S.step;
+    const done = (i === 0 && S.analysis) ||
+                 (i === 1 && S.selHook) ||
+                 (i === 2 && S.depthItems.length > 0) ||
+                 (i === 3 && S.selEmotion) ||
+                 (i === 4 && S.selOpinion) ||
+                 (i === 5 && S.script) ||
+                 (i === 6 && S.validation);
+    b.classList.toggle('ok', !!done && i !== S.step);
+  });
+}
+
+function updateRulesStrip() {
+  const chips = $$('.rule');
+  const map = {0:0, 1:0, 2:1, 3:2, 4:3, 5:4, 6:5};
+  const ruleIdx = map[S.step] ?? 0;
+  chips.forEach((c, i) => {
+    c.classList.remove('active', 'done');
+    if (i < ruleIdx) c.classList.add('done');
+    if (i === ruleIdx) c.classList.add('active');
+    if (S.step === 5 && i === 4) c.classList.add('active');
+    if (S.step === 6 && (i === 4 || i === 5)) c.classList.add('active');
+  });
+  if (S.validation) { chips[4].classList.add('done'); chips[5].classList.add('done'); }
+}
+
+function goStep(n) {
+  if (S.busy) return;
+  if (!canGo(n)) { toast('Complete the previous step first', 'err'); return; }
+  S.step = n;
+  $$('.pnl').forEach((p, i) => p.classList.toggle('hidden', i !== n));
+  updateStepNav();
+  updateRulesStrip();
+  updateBanners();
+}
+
+function updateBanners() {
+  const txt = S.selHook ? 'Hook: "' + (S.selHook.text.length > 80 ? S.selHook.text.substring(0, 80) + '…' : S.selHook.text) + '"' : '';
+  ['banner-2', 'banner-3', 'banner-4'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PROFILES
+// ═══════════════════════════════════════════════════════════════════════════
+function renderProfiles() {
+  const grid = $('#prof-grid');
+  grid.innerHTML = '';
+  PROFILES.forEach((p, i) => {
+    const d = document.createElement('div');
+    d.className = 'prof' + (i === S.profile ? ' sel' : '');
+    d.innerHTML = '<div class="prof-ico">' + p.icon + '</div><div class="prof-nm">' + esc(p.name) + '</div><div class="prof-ds">' + esc(p.desc) + '</div>';
+    d.onclick = () => { S.profile = i; renderProfiles(); };
+    grid.appendChild(d);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STEP 0: ANALYZE
+// ═══════════════════════════════════════════════════════════════════════════
+async function runAnalyze() {
+  if (S.busy) return;
+  S.topic = $('#topic-input').value.trim();
+  S.audience = $('#audience-input').value.trim();
+  if (!S.topic) { toast('Enter a topic first', 'err'); return; }
+
+  S.busy = true;
+  $('#btn-analyze').disabled = true;
+  setLoading('analyze-slot', 'AI is analyzing your business — finding the angle...');
+
+  try {
+    const result = await api('analyze', { topic: S.topic, audience: S.audience });
+    S.analysis = result;
+    // Reset downstream
+    S.hooks = []; S.selHook = null; S.depthItems = []; S.emotions = [];
+    S.selEmotion = null; S.opinions = []; S.selOpinion = null;
+    S.script = null; S.validation = null; S.appliedFixes.clear();
+
+    $('#analyze-slot').innerHTML = `
+      <div class="analysis">
+        <div class="analysis-row"><div class="analysis-key">Core Pain</div><div class="analysis-val">${esc(result.pain_point)}</div></div>
+        <div class="analysis-row"><div class="analysis-key">Hot Button</div><div class="analysis-val">${esc(result.hot_button)}</div></div>
+        <div class="analysis-row"><div class="analysis-key">2am Question</div><div class="analysis-val">${esc(result.burning_question)}</div></div>
+        <div class="analysis-row"><div class="analysis-key">Viral Angle</div><div class="analysis-val">${esc(result.angle)}</div></div>
+        <div class="analysis-row"><div class="analysis-key">Best Patterns</div><div class="analysis-val">${esc((result.best_hook_patterns || []).join(' · '))}</div></div>
+        <div class="analysis-row"><div class="analysis-key">Signature Visual</div><div class="analysis-val">${esc(result.signature_visual)}</div></div>
+        <div style="margin-top:12px;text-align:center;">
+          <button class="btn-out" onclick="window.__v26_next()">Continue to Hook →</button>
+        </div>
+      </div>`;
+    updateStepNav();
+    toast('Analysis complete — now tailored to YOUR business');
+  } catch (e) { showError('analyze-slot', e.message); }
+  S.busy = false;
+  $('#btn-analyze').disabled = false;
+}
+
+window.__v26_next = () => goStep(S.step + 1);
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STEP 1: HOOKS
+// ═══════════════════════════════════════════════════════════════════════════
+async function runHooks() {
+  if (S.busy) return;
+  S.busy = true;
+  $('#btn-hooks').disabled = true;
+  setLoading('hooks-slot', 'AI writing hooks as ' + PROFILES[S.profile].name + '...');
+  try {
+    const result = await api('hooks', {
+      topic: S.topic, audience: S.audience,
+      profile: PROFILES[S.profile], analysis: S.analysis
+    });
+    let hooks = result.hooks || [];
+    hooks.sort((a, b) => (b.score || 0) - (a.score || 0));
+    S.hooks = hooks;
+
+    $('#hooks-slot').innerHTML = '<div class="hooks-grid">' +
+      hooks.map((h, i) => `
+        <div class="hk${i === 0 ? ' top' : ''}" data-idx="${i}">
+          ${i === 0 ? '<div class="hk-top-badge">Top</div>' : ''}
+          <div class="hk-meta">
+            <span class="hk-score ${(h.score || 0) >= 92 ? 'hi' : 'md'}">${h.score || '?'}</span>
+            ${h.pattern ? '<span class="hk-pattern">' + esc(h.pattern) + '</span>' : ''}
+          </div>
+          <p class="hk-txt">${esc(h.text)}</p>
+        </div>`).join('') + '</div>';
+
+    $$('.hk').forEach(card => {
+      card.onclick = () => {
+        const i = +card.dataset.idx;
+        $$('.hk').forEach(c => c.classList.remove('sel'));
+        card.classList.add('sel');
+        S.selHook = hooks[i];
+        S.depthItems = []; S.emotions = []; S.selEmotion = null;
+        S.opinions = []; S.selOpinion = null; S.script = null; S.validation = null; S.appliedFixes.clear();
+        ['depth-slot','emotions-slot','opinions-slot','script-slot','validate-slot'].forEach(clearSlot);
+        toast('Hook selected — Score ' + hooks[i].score);
+        updateBanners(); updateStepNav();
+        setTimeout(() => goStep(2), 350);
+      };
+    });
+    toast('8 unique hooks generated!');
+  } catch (e) { showError('hooks-slot', e.message); }
+  S.busy = false;
+  $('#btn-hooks').disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STEP 2: DEPTH
+// ═══════════════════════════════════════════════════════════════════════════
+async function runDepth() {
+  if (S.busy) return;
+  S.busy = true;
+  $('#btn-depth').disabled = true;
+  setLoading('depth-slot', 'Building save-worthy depth content...');
+  try {
+    const result = await api('depth', {
+      topic: S.topic, audience: S.audience,
+      hook: S.selHook.text, analysis: S.analysis
+    });
+    S.depthItems = result.items || [];
+    $('#depth-slot').innerHTML = '<div class="depth">' +
+      S.depthItems.map((d, i) => `<div class="depth-item"><span class="depth-n">${i + 1}.</span><span>${esc(d)}</span></div>`).join('') + '</div>';
+    updateStepNav();
+    toast('Depth content ready!');
+  } catch (e) { showError('depth-slot', e.message); }
+  S.busy = false;
+  $('#btn-depth').disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STEP 3: EMOTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+async function runEmotions() {
+  if (S.busy) return;
+  S.busy = true;
+  $('#btn-emotions').disabled = true;
+  S.selEmotion = null;
+  setLoading('emotions-slot', 'Crafting emotional triggers...');
+  try {
+    const result = await api('emotions', {
+      topic: S.topic, audience: S.audience,
+      hook: S.selHook.text, analysis: S.analysis
+    });
+    S.emotions = result.emotions || [];
+    $('#emotions-slot').innerHTML = '<div class="opts">' +
+      S.emotions.map((e, i) => `
+        <div class="opt" data-idx="${i}">
+          <div class="opt-emo">${esc(e.emoji || '🎯')}</div>
+          <div class="opt-ttl">${esc(e.title)}</div>
+          <div class="opt-dsc">${esc(e.desc)}</div>
+          <div class="opt-vo">"${esc(e.voiceover)}"</div>
+          ${e.visual_cue ? '<div class="opt-vis">🎬 ' + esc(e.visual_cue) + '</div>' : ''}
+        </div>`).join('') + '</div>';
+    $$('.opt').forEach(card => {
+      card.onclick = () => {
+        const i = +card.dataset.idx;
+        $$('.opt').forEach(c => c.classList.remove('sel'));
+        card.classList.add('sel');
+        S.selEmotion = S.emotions[i];
+        toast('Emotion: ' + S.emotions[i].title);
+        updateStepNav();
+      };
+    });
+    toast('3 emotion angles ready!');
+  } catch (e) { showError('emotions-slot', e.message); }
+  S.busy = false;
+  $('#btn-emotions').disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STEP 4: OPINIONS
+// ═══════════════════════════════════════════════════════════════════════════
+async function runOpinions() {
+  if (S.busy) return;
+  S.busy = true;
+  $('#btn-opinions').disabled = true;
+  S.selOpinion = null;
+  setLoading('opinions-slot', 'Writing polarizing opinions...');
+  try {
+    const result = await api('opinions', {
+      topic: S.topic, audience: S.audience,
+      hook: S.selHook.text, analysis: S.analysis
+    });
+    S.opinions = result.opinions || [];
+    $('#opinions-slot').innerHTML = '<div class="ops">' +
+      S.opinions.map((o, i) => `
+        <div class="op" data-idx="${i}">
+          <div class="op-n">${i + 1}</div>
+          <div class="op-t">"${esc(o)}"</div>
+        </div>`).join('') + '</div>';
+    $$('.op').forEach(card => {
+      card.onclick = () => {
+        const i = +card.dataset.idx;
+        $$('.op').forEach(c => c.classList.remove('sel'));
+        card.classList.add('sel');
+        S.selOpinion = S.opinions[i];
+        toast('Opinion #' + (i + 1) + ' selected');
+        updateStepNav();
+      };
+    });
+    toast('5 opinions ready!');
+  } catch (e) { showError('opinions-slot', e.message); }
+  S.busy = false;
+  $('#btn-opinions').disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STEP 5: SCRIPT
+// ═══════════════════════════════════════════════════════════════════════════
+async function runScript() {
+  if (S.busy) return;
+  S.busy = true;
+  $('#btn-script').disabled = true;
+  setLoading('script-slot', 'Writing production-ready script with shot-by-shot direction...');
+  try {
+    const result = await api('script', {
+      topic: S.topic, audience: S.audience,
+      hook: S.selHook.text, depthItems: S.depthItems,
+      emotion: S.selEmotion, opinion: S.selOpinion, analysis: S.analysis
+    });
+    S.script = result;
+    const segs = result.segments || [];
+
+    let html = `<div style="margin-top:18px;">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--gold);font-size:14px;margin-bottom:12px;">READY-TO-FILM SCRIPT (${esc(result.total_duration || '12s')})</div>`;
+
+    segs.forEach(seg => {
+      html += `<div class="seg">
+        <div class="seg-t">${esc(seg.time)}</div>
+        <div class="seg-body">
+          <div class="seg-row"><span class="seg-lbl">SAY</span><span class="seg-vo">"${esc(seg.voiceover)}"</span></div>
+          ${seg.camera ? '<div class="seg-row"><span class="seg-lbl">CAMERA</span><span class="seg-cam">' + esc(seg.camera) + '</span></div>' : ''}
+          ${seg.action ? '<div class="seg-row"><span class="seg-lbl">ACTION</span><span class="seg-act">' + esc(seg.action) + '</span></div>' : ''}
+          <div class="seg-row"><span class="seg-lbl">VISUAL</span><span class="seg-vis">${esc(seg.visual)}</span></div>
+          ${seg.text_overlay ? '<div class="seg-row"><span class="seg-lbl">ON-SCREEN</span><span class="seg-txt">' + esc(seg.text_overlay) + '</span></div>' : ''}
+          ${seg.expression ? '<div class="seg-row"><span class="seg-lbl">FACE</span><span class="seg-ex">' + esc(seg.expression) + '</span></div>' : ''}
+          ${seg.transition ? '<div class="seg-row"><span class="seg-lbl">TRANSITION</span><span class="seg-tr">↪ ' + esc(seg.transition) + '</span></div>' : ''}
+        </div>
+      </div>`;
+    });
+
+    if (result.music) html += '<div style="margin-top:12px;font-size:13px;color:var(--g3);">🎵 <b>Music:</b> ' + esc(result.music) + '</div>';
+    if (result.cta) html += '<div style="margin-top:6px;font-size:13px;color:var(--goldL);">📢 <b>CTA:</b> ' + esc(result.cta) + '</div>';
+
+    if (result.filming_tips?.length) {
+      html += '<div style="margin-top:16px;"><div style="font-family:\'Syne\',sans-serif;font-weight:700;color:var(--gold);font-size:13px;margin-bottom:6px;">FILMING TIPS</div>';
+      result.filming_tips.forEach(t => { html += '<div style="font-size:12px;padding:3px 0;color:var(--g3);">• ' + esc(t) + '</div>'; });
+      html += '</div>';
+    }
+
+    html += '</div>';
+    $('#script-slot').innerHTML = html;
+
+    $('#btn-copy-all').disabled = false;
+    updateStepNav();
+    toast('Script ready — now run Validation to get the Video AI Prompt');
+  } catch (e) { showError('script-slot', e.message); }
+  S.busy = false;
+  $('#btn-script').disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  STEP 6: VALIDATE
+// ═══════════════════════════════════════════════════════════════════════════
+async function runValidate() {
+  if (S.busy || !S.script) return;
+  S.busy = true;
+  $('#btn-validate').disabled = true;
+  S.appliedFixes.clear();
+  setLoading('validate-slot', 'Analyzing every element + building Video AI Prompt...');
+  try {
+    const result = await api('validate', {
+      topic: S.topic, audience: S.audience,
+      hook: S.selHook.text, depthItems: S.depthItems,
+      emotion: S.selEmotion, opinion: S.selOpinion, script: S.script
+    });
+    S.validation = result;
+    renderValidation();
+    $('#btn-copy-prompt').disabled = false;
+    updateStepNav();
+    const verdictMsg = {
+      AMAZING: '🔥 AMAZING — this will go viral!',
+      GREAT: '💪 GREAT — strong viral potential',
+      GOOD: '👍 GOOD — apply fixes to push higher',
+      'NEEDS WORK': '⚠️ Needs work — check the fixes'
+    };
+    toast(verdictMsg[result.verdict] || 'Validation complete');
+  } catch (e) { showError('validate-slot', e.message); }
+  S.busy = false;
+  $('#btn-validate').disabled = false;
+}
+
+function renderValidation() {
+  const v = S.validation;
+  if (!v) return;
+
+  const verdictColor = v.verdict === 'AMAZING' ? 'var(--grn)' :
+                       v.verdict === 'GREAT' ? 'var(--grn)' :
+                       v.verdict === 'GOOD' ? 'var(--org)' : 'var(--red)';
+  const verdictBg = v.verdict === 'AMAZING' || v.verdict === 'GREAT' ? 'var(--grnD)' :
+                    v.verdict === 'GOOD' ? 'var(--orgD)' : 'var(--redD)';
+  const icon = v.verdict === 'AMAZING' ? '🔥' : v.verdict === 'GREAT' ? '💪' : v.verdict === 'GOOD' ? '👍' : '⚠️';
+
+  let html = `
+    <div style="margin-top:18px;">
+      <div class="verdict-box" style="background:${verdictBg};border:1px solid ${verdictColor};">
+        <div class="verdict-hd" style="color:${verdictColor};">${icon} ${esc(v.verdict || 'EVALUATED')}</div>
+        <div style="font-size:14px;color:#f5f5f5;">Score: <b style="color:${verdictColor};">${v.overall_score || '?'}/100</b> — Predicted reach: <b>${esc(v.predicted_reach || 'N/A')}</b></div>
+      </div>`;
+
+  if (v.scores) {
+    html += '<div class="scores-grid">';
+    Object.entries(v.scores).forEach(([key, val]) => {
+      const scoreColor = val.score >= 8 ? 'var(--grn)' : val.score >= 6 ? 'var(--org)' : 'var(--red)';
+      html += `
+        <div class="score-card">
+          <div class="score-head">
+            <span class="score-name">${esc(key)}</span>
+            <span class="score-num" style="color:${scoreColor};">${val.score}</span>
+          </div>
+          <div class="score-note">${esc(val.note)}</div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  if (v.strengths?.length) {
+    html += '<div style="margin-bottom:14px;"><div class="section-hd grn">✅ STRENGTHS</div>';
+    v.strengths.forEach(s => { html += '<div style="font-size:12px;padding:3px 0;color:var(--g3);">• ' + esc(s) + '</div>'; });
+    html += '</div>';
+  }
+
+  if (v.weaknesses?.length) {
+    html += '<div style="margin-bottom:18px;"><div class="section-hd org">⚠️ WEAKNESSES + FIXES</div>';
+    v.weaknesses.forEach((w, i) => {
+      const applied = S.appliedFixes.has(i);
+      html += `
+        <div class="weakness${applied ? ' applied' : ''}" id="weak-${i}">
+          <div class="weakness-issue">${applied ? '✅ Applied:' : 'Issue:'} ${esc(w.issue)}</div>
+          <div class="weakness-fix">Fix: ${esc(w.fix)}</div>
+          <button class="fix-btn${applied ? ' done' : ''}" data-weak-idx="${i}" ${applied ? 'disabled' : ''}>
+            ${applied ? '✓ Applied' : '✨ Apply This Fix'}
+          </button>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  if (v.video_prompt) {
+    html += `
+      <div class="vp-box">
+        <button class="vp-cp" id="vp-copy-btn">📋 Copy</button>
+        <div class="vp-lbl">🎥 VIDEO AI PROMPT (Grok / Sora / Runway / Kling)</div>
+        <div class="vp-text">${esc(v.video_prompt)}</div>
+      </div>`;
+  }
+
+  html += '</div>';
+  $('#validate-slot').innerHTML = html;
+
+  // Bind fix buttons
+  $$('.fix-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const idx = +btn.dataset.weakIdx;
+      const w = v.weaknesses[idx];
+      await applyFix(idx, w);
+    };
+  });
+
+  // Bind video prompt copy
+  const vpBtn = $('#vp-copy-btn');
+  if (vpBtn) {
+    vpBtn.onclick = async () => {
+      const ok = await copyText(v.video_prompt);
+      if (ok) {
+        vpBtn.textContent = '✓ Copied';
+        vpBtn.classList.add('done');
+        toast('Video AI prompt copied!');
+        setTimeout(() => { vpBtn.textContent = '📋 Copy'; vpBtn.classList.remove('done'); }, 2500);
+      } else {
+        toast('Copy failed — select text manually', 'err');
+      }
+    };
+  }
+}
+
+async function applyFix(idx, w) {
+  const cat = (w.category || '').toLowerCase();
+  const issue = (w.issue || '').toLowerCase();
+
+  if (cat.includes('hook') || issue.includes('hook')) {
+    S.selHook = { ...S.selHook, text: w.fix };
+    toast('Hook updated!');
+  } else if (cat.includes('opinion') || issue.includes('opinion')) {
+    S.selOpinion = w.fix;
+    toast('Opinion updated!');
+  } else if (cat.includes('emotion') || issue.includes('emotion')) {
+    S.selEmotion = { ...S.selEmotion, voiceover: w.fix };
+    toast('Emotion voiceover updated!');
+  } else {
+    toast('Fix noted for next script regeneration');
+  }
+
+  // Visual confirmation
+  S.appliedFixes.add(idx);
+  const card = $('#weak-' + idx);
+  if (card) {
+    card.classList.add('applied');
+    const issueDiv = card.querySelector('.weakness-issue');
+    if (issueDiv) issueDiv.innerHTML = '✅ Applied: ' + esc(w.issue);
+    const btn = card.querySelector('.fix-btn');
+    if (btn) { btn.textContent = '✓ Applied'; btn.classList.add('done'); btn.disabled = true; }
+  }
+
+  updateBanners();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  COPY & RESET
+// ═══════════════════════════════════════════════════════════════════════════
+function buildFullText() {
+  if (!S.script) return '';
+  const sep = '═'.repeat(55);
+  const dash = '─'.repeat(55);
+  let t = 'VIRAL2026 — FULL PRODUCTION BIBLE\n' + sep + '\n';
+  t += 'TOPIC: ' + S.topic + '\n';
+  t += 'AUDIENCE: ' + (S.audience || 'General') + '\n';
+  t += 'PROFILE: ' + PROFILES[S.profile].name + '\n\n';
+
+  if (S.analysis) {
+    t += dash + '\nBUSINESS ANALYSIS\n' + dash + '\n';
+    t += 'Pain Point: ' + S.analysis.pain_point + '\n';
+    t += 'Hot Button: ' + S.analysis.hot_button + '\n';
+    t += 'Burning Question: ' + S.analysis.burning_question + '\n';
+    t += 'Viral Angle: ' + S.analysis.angle + '\n';
+    t += 'Signature Visual: ' + S.analysis.signature_visual + '\n\n';
+  }
+
+  t += dash + '\nHOOK (Score: ' + (S.selHook?.score || '?') + ')\n' + dash + '\n';
+  t += (S.selHook?.text || '') + '\n\n';
+
+  t += dash + '\nDEPTH CONTENT\n' + dash + '\n';
+  S.depthItems.forEach((d, i) => { t += (i + 1) + '. ' + d + '\n'; });
+
+  t += '\n' + dash + '\nEMOTION\n' + dash + '\n';
+  t += (S.selEmotion?.emoji || '') + ' ' + (S.selEmotion?.title || '') + ' — ' + (S.selEmotion?.desc || '') + '\n';
+  t += 'Voiceover: "' + (S.selEmotion?.voiceover || '') + '"\n';
+  if (S.selEmotion?.visual_cue) t += 'Visual: ' + S.selEmotion.visual_cue + '\n';
+
+  t += '\n' + dash + '\nOPINION\n' + dash + '\n';
+  t += '"' + (S.selOpinion || '') + '"\n\n';
+
+  t += dash + '\nPRODUCTION SCRIPT (' + (S.script.total_duration || '12s') + ')\n' + dash + '\n';
+  (S.script.segments || []).forEach(s => {
+    t += '[' + s.time + ']\n';
+    t += '  SAY: "' + s.voiceover + '"\n';
+    if (s.camera) t += '  CAMERA: ' + s.camera + '\n';
+    if (s.action) t += '  ACTION: ' + s.action + '\n';
+    t += '  VISUAL: ' + s.visual + '\n';
+    if (s.text_overlay) t += '  ON-SCREEN TEXT: ' + s.text_overlay + '\n';
+    if (s.expression) t += '  EXPRESSION: ' + s.expression + '\n';
+    if (s.transition) t += '  TRANSITION: ' + s.transition + '\n';
+    t += '\n';
+  });
+
+  if (S.script.music) t += '🎵 MUSIC: ' + S.script.music + '\n';
+  if (S.script.cta) t += '📢 CTA: ' + S.script.cta + '\n';
+
+  if (S.script.filming_tips?.length) {
+    t += '\n' + dash + '\nFILMING TIPS\n' + dash + '\n';
+    S.script.filming_tips.forEach(tip => { t += '• ' + tip + '\n'; });
+  }
+
+  if (S.validation) {
+    t += '\n' + dash + '\nVALIDATION (Score: ' + (S.validation.overall_score || '?') + '/100 — ' + (S.validation.verdict || '') + ')\n';
+    t += 'Predicted Reach: ' + (S.validation.predicted_reach || 'N/A') + '\n' + dash + '\n';
+    if (S.validation.scores) {
+      Object.entries(S.validation.scores).forEach(([k, v]) => {
+        const icon = v.score >= 8 ? '✅' : v.score >= 6 ? '⚠️' : '❌';
+        t += icon + ' ' + k + ': ' + v.score + '/10 — ' + v.note + '\n';
+      });
+    }
+    if (S.validation.strengths?.length) {
+      t += '\nSTRENGTHS:\n' + S.validation.strengths.map(x => '• ' + x).join('\n') + '\n';
+    }
+    if (S.validation.weaknesses?.length) {
+      t += '\nWEAKNESSES + FIXES:\n' + S.validation.weaknesses.map(w => '• ' + w.issue + ' → ' + w.fix).join('\n') + '\n';
+    }
+    if (S.validation.video_prompt) {
+      t += '\n' + dash + '\nVIDEO AI PROMPT (Grok / Sora / Runway / Kling)\n' + dash + '\n';
+      t += S.validation.video_prompt + '\n';
+    }
+  }
+
+  return t;
+}
+
+async function doCopyAll() {
+  const text = buildFullText();
+  if (!text) { toast('Generate a script first', 'err'); return; }
+  const ok = await copyText(text);
+  if (ok) toast('Full production bible copied!');
+  else toast('Copy failed — try Copy Video Prompt instead', 'err');
+}
+
+async function doCopyPrompt() {
+  const p = S.validation?.video_prompt;
+  if (!p) { toast('Run Validation first', 'err'); return; }
+  const ok = await copyText(p);
+  if (ok) toast('Video AI prompt copied!');
+  else toast('Copy failed — select text manually', 'err');
+}
+
+function doReset() {
+  S.step = 0; S.profile = 0;
+  S.topic = ''; S.audience = '';
+  S.analysis = null; S.hooks = []; S.selHook = null;
+  S.depthItems = []; S.emotions = []; S.selEmotion = null;
+  S.opinions = []; S.selOpinion = null;
+  S.script = null; S.validation = null; S.appliedFixes.clear();
+  S.busy = false;
+
+  $('#topic-input').value = '';
+  $('#audience-input').value = '';
+  ['analyze-slot','hooks-slot','depth-slot','emotions-slot','opinions-slot','script-slot','validate-slot'].forEach(clearSlot);
+  $('#btn-copy-all').disabled = true;
+  $('#btn-copy-prompt').disabled = true;
+
+  $$('.pnl').forEach((p, i) => p.classList.toggle('hidden', i !== 0));
+  renderProfiles();
+  updateStepNav();
+  updateRulesStrip();
+  toast('Reset — starting fresh');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════════════════
+function init() {
+  renderProfiles();
+  $$('.s-btn').forEach(b => b.onclick = () => goStep(+b.dataset.s));
+  $('#btn-analyze').onclick = runAnalyze;
+  $('#btn-hooks').onclick = runHooks;
+  $('#btn-depth').onclick = runDepth;
+  $('#btn-emotions').onclick = runEmotions;
+  $('#btn-opinions').onclick = runOpinions;
+  $('#btn-script').onclick = runScript;
+  $('#btn-validate').onclick = runValidate;
+  $('#btn-copy-all').onclick = doCopyAll;
+  $('#btn-copy-prompt').onclick = doCopyPrompt;
+  $('#btn-reset').onclick = doReset;
+
+  $('#topic-input').addEventListener('keydown', e => { if (e.key === 'Enter') runAnalyze(); });
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+
+})();
+</script>
+</body>
+</html>
